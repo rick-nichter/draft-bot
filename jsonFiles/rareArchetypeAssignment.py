@@ -1,17 +1,40 @@
-import json
+import requests, json
+from bs4 import BeautifulSoup
 
-with open("jsonFiles/thbCardList.json", encoding="utf8") as cardListFile:
-		thbCards = json.load(cardListFile)
+# This file adds archetype rankings to rare cards in the list 
+# (since they are not ranked in archetype like commons and uncommons)
 
-rareList = ["Heliod, Sun-Crowned", "Erebos, Bleak-Hearted", "Elspeth, Sun's Nemesis", \
-	"Nightmare Shepherd", "Kiora Bests the Sea God", "Polukranos, Unchained", "Shadowspear", \
-	"Purphoros, Bronze-Blooded", "Archon of Sun's Grace", "Nadir Kraken", \
-	"Uro, Titan of Nature's Wrath", "Ashiok, Nightmare Muse", "Thassa, Deep-Dwelling", \
-	"Thryx, the Sudden Storm", "Nylea, Keen-Eyed", "Setessan Champion", "Dream Trawler", \
-	"Kroxa, Titan of Death's Hunger", "Taranika, Akroan Veteran", "Mantle of the Wolf", \
-	"Woe Strider", "Klothys, God of Destiny", \
-	"Erebos's Intervention", "Eat to Extinction", "Ox of Agonas", "The First Iroan Games", \
-	"Arasta of the Endless Web", "Phoenix of Ash", "Dryad of the Ilysian Grove", \
-	"Elspeth Conquers Death", "Gravebreaker Lamia", "Aphemia, the Cacophony", \
-	"Tectonic Giant", "Storm's Wrath", "Shatter the Sky", "Calix, Destiny's Hand", \
-	"Kunoros, Hound of Athreos", "The Akroan War", "Nessian Boar", "Purphoros's Intervention"]
+def assignRareRatings(thbCards):
+	pickTableLocation = "https://draftsim.com/wp-admin/admin-ajax.php?" + \
+		"action=wp_ajax_ninja_tables_public_action&table_id=2101&target_action" + \
+		"=get-all-data&default_sorting=old_first"
+
+	pickTable = requests.get(pickTableLocation).json()
+
+	# Loop through pick order, saving rare values based on rank
+	for row in pickTable:
+		# Get the rank of this item
+		contents = row["value"]
+		rank = contents["rank"]
+		# Rating is going to be low to high; the higher the better (opposite of rank)
+		rating = 253.5 - float(rank)
+
+		# Get the cardname
+		cardName = BeautifulSoup(contents["cardname"], "html.parser").get_text()
+
+		# For each archetype that this card fits, save its rating in our THB cards file
+		cardData = thbCards[cardName]
+		multipleColors = ""
+		# For each color this card is, add its rating to that archetype
+		for c in cardData["colors"]:
+			# If this card is more than one color, we only want it to fit into one archetype
+			#if len(cardData["colors"]) > 1:
+			for a in cardData["archetypes"].keys():
+				if c in a:
+					# Only update for cards that do not have a rating yet
+					if cardData["archetypes"][a] == 0.0:
+						thbCards[cardName]["archetypes"][a] = rating
+
+	# Update file
+	thbFile = open("thbCardList.json", "w")
+	json.dump(thbCards, thbFile)

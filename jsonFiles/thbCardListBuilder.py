@@ -1,4 +1,4 @@
-import requests, json
+import requests, json, rareArchetypeAssignment
 from bs4 import BeautifulSoup
 
 # This file adds archetype rankings to common/uncommon cards in the list
@@ -110,3 +110,7 @@ for row in rTable:
 # Update file
 thbFile = open("thbCardList.json", "w")
 json.dump(thbCards, thbFile)
+thbFile.close()
+
+# Get ratings for rare cards
+rareArchetypeAssignment.assignRareRatings(thbCards)
