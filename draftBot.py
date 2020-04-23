@@ -1,32 +1,35 @@
 import json, sys, requests
 import environmentBuilder as env
 
-idealDistribution = [3, 12, 10, 6, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+idealDistribution = [2, 7, 6, 4, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0]
 totalCardsNeeded = sum(idealDistribution)
 # a dict of all cards in standard with details about each card
 # CardName -> CardObject
 with open("jsonFiles/thbCardList.json", encoding="utf8") as cardListFile:
 		thbCards = json.load(cardListFile)
 
-def main(infoId, picksId):
-	infoLocation = "https://draft.cardsphere.com/rest/v1/draft/" + infoId
+def main(picksId, draftFile, pickNum, pickThreshold):
 	picksLocation = "https://draft.cardsphere.com/rest/v1/draft/*/instance/" + picksId
-	infoResponse = requests.get(infoLocation)
-	picksResponse = requests.get(picksLocation)
+	picksResponse = requests.get(picksLocation).json()
+
+	infoId = picksResponse["draftId"]
+	infoLocation = "https://draft.cardsphere.com/rest/v1/draft/" + infoId
+	infoResponse = requests.get(infoLocation).json()
+
 	draftPacks, draftCards, draftPicks, currentPack = \
-		env.createDraftEnvironment(infoResponse.json(), picksResponse.json())
-	draftCard(currentPack, draftPicks)
+		env.createDraftEnvironment(infoResponse, picksResponse)
+
+	draftFile.write("PICK " + str(pickNum) + "\n\n")
+	return draftCard(currentPack, draftFile, pickThreshold, draftPicks)
 
 # select a card to draft from the given set, based on the cards already picked
-def draftCard(pack, previousPicks = []):
+def draftCard(pack, draftFile, pickThreshold, previousPicks = []):
 	global thbCards
-
-	# TODO: write draft data to a file
-	#draftFile = open("jsonFiles/draft.json")
-	print("Options: ")
-	print(pack)
-	print("Previously picked: ")
-	print(previousPicks)
+	
+	draftFile.write("Options: \n")
+	draftFile.write(str(pack)[1:-1] + "\n")
+	draftFile.write("\nPreviously picked: \n")
+	draftFile.write(str(previousPicks)[1:-1] + "\n")
 
 	# create a detailed dict of previous picks (not just their names)
 	detailedPreviousPicks = {}
@@ -34,18 +37,40 @@ def draftCard(pack, previousPicks = []):
 		detailedPreviousPicks[pick] = thbCards[pick]
 
 	# select best card out of pack based on a number of factors
+
 	highestUtility = -1000000.0
+	highestArchetypeUtility = -1000000.0
+	# this is the highest card rating in general
 	pick = ""
-	mostPresentArchetype = calculateMostPresentArchetype(detailedPreviousPicks)
+	# this is the highest card rating for current archetype
+	archetypePick = ""
+
+	mostPresentArchetype, rating = calculateMostPresentArchetype(detailedPreviousPicks)
+	topRating = calculateAverageDeckRating(detailedPreviousPicks, mostPresentArchetype)
+
 	for cardName in pack:
 		cardDetails = thbCards[cardName]
-		cardUtility = calculateArchetypeUtility(cardDetails, mostPresentArchetype)
+		cardUtility = calculateArchetypeUtility(cardDetails)
+		cardArchetypeUtility = calculateArchetypeUtility(cardDetails, mostPresentArchetype)
 		if cardUtility > highestUtility:
 			highestUtility = cardUtility
 			pick = cardName
+		if cardArchetypeUtility > highestArchetypeUtility:
+			highestArchetypeUtility = cardArchetypeUtility
+			archetypePick = cardName
 
-	print("DraftBot recommends picking: ")
-	print(pick)
+	# if a card is very good, but outside of the archetype, see if we should pick it	
+	if cardUtility > cardArchetypeUtility + pickThreshold:
+		archetypePick = pick
+
+	draftFile.write("\nBest rating before pick: " + mostPresentArchetype \
+		 + " " + str(rating))
+	draftFile.write("\nTop cards rating before pick: " + str(topRating))
+
+	draftFile.write("\nDraftBot picked: ")
+	draftFile.write(pick + "\n\n")
+
+	return archetypePick, topRating
 
 
 # calculates the individual utility of a creature card 
@@ -87,14 +112,13 @@ def cmc(card):
 	return card["cmc"]
 
 # Calcualte the archetype utility of the given card
-def calculateArchetypeUtility(card, archetype):
+def calculateArchetypeUtility(card, archetype=""):
 	# if there is no strongest archetype, just return this cards highest utility
 	if archetype == "":
 		maxRating = 0.0
 		for a in card["archetypes"].keys():
 			if card["archetypes"][a] > maxRating:
 				maxRating = card["archetypes"][a]
-
 		return maxRating
 	else:
 		return card["archetypes"][archetype]
@@ -121,11 +145,27 @@ def calculateMostPresentArchetype(previousPicks):
 			bestArchetype = a
 			maxRating = averageArchetypeRatings[a]
 
-	print(averageArchetypeRatings)
-	print(bestArchetype)
+	return bestArchetype, maxRating
 
-	return bestArchetype
+# Calculate the average rating of the top 23 cards given
+def calculateAverageDeckRating(cards, bestArchetype):
+	bestCardRatings = []
+	for card in cards.values():
+		if len(bestCardRatings) < 23:
+			bestCardRatings.append(card["archetypes"][bestArchetype])
+		elif bestCardRatings[22] < card["archetypes"][bestArchetype]:
+			bestCardRatings.pop()
+			bestCardRatings.append(card["archetypes"][bestArchetype])
+
+		bestCardRatings.sort(reverse=True)
+
+	total = sum(bestCardRatings)
+	averageRating = 0.0
+	if len(bestCardRatings) != 0:
+		averageRating = total / len(bestCardRatings)
+
+	return averageRating
 
 
-# send the first and second argument, which should be urls to a draft simulation
-main(sys.argv[1], sys.argv[2])
+# send the first argument, which should be url to a draft simulation
+# main(sys.argv[1])

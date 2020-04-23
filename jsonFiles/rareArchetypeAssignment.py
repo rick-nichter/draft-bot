@@ -26,14 +26,20 @@ def assignRareRatings(thbCards):
 		cardData = thbCards[cardName]
 		multipleColors = ""
 		# For each color this card is, add its rating to that archetype
-		for c in cardData["colors"]:
-			# If this card is more than one color, we only want it to fit into one archetype
-			#if len(cardData["colors"]) > 1:
+		if len(cardData["colors"]) == 1:
 			for a in cardData["archetypes"].keys():
-				if c in a:
+				if cardData["colors"][0] in a:
 					# Only update for cards that do not have a rating yet
 					if cardData["archetypes"][a] == 0.0:
 						thbCards[cardName]["archetypes"][a] = rating
+		elif len(cardData["colors"]) == 2:
+			# If the card is multiple colors, it only fits in one archetype		
+			for a in cardData["archetypes"].keys():
+				if cardData["colors"][0] in a and cardData["colors"][1] in a:
+					# Only update for cards that do not have a rating yet
+					if cardData["archetypes"][a] == 0.0:
+						thbCards[cardName]["archetypes"][a] = rating
+
 
 	# Update file
 	thbFile = open("thbCardList.json", "w")

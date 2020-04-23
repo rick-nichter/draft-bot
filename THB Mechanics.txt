@@ -1,8 +1,3 @@
-THB Mechanics
-- Escape
-- Constellation
-- Devotion
-
 THB notes:
 - Draft a deck where all cards contribute to the same plan
 - Build/draft with maximizing best cards in mind (top 20 cards WAY better than other 234)
@@ -18,13 +13,3 @@ Archetypes:
 - Blue-White (UW) Fliers
 - Blue-Green (UG) Constellation
 - Green-White (GW) Auras
-
-How I'm representing archetypes:
-	Each card gets a rating from 0.0-5.0 for each archetype. Rough details based on rating:
-	0.0: Cannot be played in archetype (incorrect colors)
-	0.5: Possible to play, but is so bad that it should not be
-	1.0: Probably shouldn't be played except in rare cases
-	2.0: Could be played, but there are likely better options
-	3.0: Ought to be played; it fits well with the theme
-	4.0: One of the best cards of this theme
-	5.0: The best card for this archetype
