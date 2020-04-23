@@ -1,0 +1,22 @@
+
+Average rating for pick threshold 2 with 10 trials: 159.7748253490081
+Average rating for pick threshold 1 with 10 trials: 162.4264262156907
+Average rating for pick threshold -1 with 10 trials: 163.45511903891762
+Average rating for pick threshold 3 with 10 trials: 161.82168224937348
+Average rating for pick threshold 4 with 10 trials: 161.21448012957188
+Average rating for pick threshold 0 with 10 trials: 161.2127125450425
+Average rating for pick threshold -5 with 10 trials: 155.3270976934216
+Average rating for pick threshold -2 with 10 trials: 155.63426015687696
+Average rating for pick threshold -3 with 10 trials: 161.03656801652036
+Average rating for pick threshold -4 with 10 trials: 157.06073375052304
+
+Average rating for pick threshold 9 with 150 trials: 146.88015739462668
+Average rating for pick threshold -1 with 150 trials: 147.12958636504752
+Average rating for pick threshold -7 with 150 trials: 144.93287965475923
+Average rating for pick threshold -9 with 150 trials: 145.782601106987
+Average rating for pick threshold 7 with 150 trials: 145.81099896501547
+Average rating for pick threshold -5 with 150 trials: 145.54900041962364
+Average rating for pick threshold 1 with 150 trials: 146.6671102946469
+Average rating for pick threshold 5 with 150 trials: 146.67123000001527
+Average rating for pick threshold -3 with 150 trials: 145.75510868437087
+Average rating for pick threshold 3 with 150 trials: 146.70573340631955

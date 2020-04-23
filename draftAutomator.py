@@ -42,7 +42,10 @@ def automate(trials, pickThreshold, fileNum):
 
 		# Loop through until draft is finished
 		while len(driver.find_elements_by_xpath("//h3[text() = 'Draft finished']")) < 1:
-			pickClick, topRating = findCardElement(pageId, draftFile, pickNum, pickThreshold, \
+			# Calculate adjusted threshold
+			aThreshold = pickThreshold + ((pickNum - 15) / 4) ** 3
+
+			pickClick, topRating = findCardElement(pageId, draftFile, pickNum, aThreshold, \
 				driver)
 			# pickClick = driver.find_element_by_xpath("//div[text() = \"" + pick + "\"]")
 			driver.execute_script("arguments[0].click();", pickClick)
@@ -59,5 +62,10 @@ def automate(trials, pickThreshold, fileNum):
 	draftFile.write("\nAverage rating: " + str(sum(topRatings) / len(topRatings)))
 	draftFile.write("\nSim start: " + str(startTime) + "\nSim end: " + str(endTime))
 
+	trialResultsFile = open("logs/trialResults.txt", "a")
+	trialResultsFile.write("\nAverage rating for pick threshold " + str(pickThreshold) + \
+		" with " + str(trials) + " trials: " + str(sum(topRatings) / len(topRatings)))
+
+	trialResultsFile.close()
 	draftFile.close()
 	driver.close()
